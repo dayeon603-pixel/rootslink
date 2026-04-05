@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Become a Mentor — RootsLink</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">RootsLink</a>
+  <div class="nav-links">
+    <a href="opportunities.html">Opportunities</a>
+    <a href="register-student.html">Join as Student</a>
+    <a href="dashboard.html">Dashboard</a>
+  </div>
+</nav>
+
+<div class="form-container">
+  <h1 class="form-title">Become a Mentor</h1>
+  <p class="form-sub">Share your expertise. Help talented students find pathways — without having to leave.</p>
+
+  <div id="alert-area"></div>
+
+  <form id="mentor-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" required placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input type="email" id="email" required placeholder="you@email.com" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="field">Primary Field *</label>
+        <input type="text" id="field" required placeholder="e.g. Computer Science, Public Health" />
+      </div>
+      <div class="form-group">
+        <label for="country">Country *</label>
+        <input type="text" id="country" required placeholder="e.g. Kenya" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="language">Primary Language *</label>
+        <select id="language">
+          <option value="English">English</option>
+          <option value="French">French</option>
+          <option value="Spanish">Spanish</option>
+          <option value="Arabic">Arabic</option>
+          <option value="Portuguese">Portuguese</option>
+          <option value="Korean">Korean</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Swahili">Swahili</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="experience">Years of Experience</label>
+        <input type="number" id="experience" min="0" max="50" value="0" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="capacity">Max Concurrent Mentees</label>
+        <input type="number" id="capacity" min="1" max="20" value="3" />
+      </div>
+      <div class="form-group">
+        <label for="diaspora" style="display:flex; align-items:center; gap:.5rem; margin-top:1.8rem;">
+          <input type="checkbox" id="diaspora" />
+          I am a diaspora professional
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="expertise">Expertise Tags (comma-separated)</label>
+      <input type="text" id="expertise" placeholder="e.g. machine learning, policy, startup" />
+    </div>
+
+    <div class="form-group">
+      <label for="bio">Short Bio</label>
+      <textarea id="bio" placeholder="Tell students about your background and what you can help with..."></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:.5rem;">
+      Join as Mentor
+    </button>
+  </form>
+</div>
+
+<footer>
+  <p>RootsLink · <a href="index.html">Home</a></p>
+</footer>
+
+<script>
+  const API = "http://localhost:8000";
+
+  document.getElementById("mentor-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const alertArea = document.getElementById("alert-area");
+    const toList = (val) => val.split(",").map(s => s.trim()).filter(Boolean);
+
+    const payload = {
+      name:                document.getElementById("name").value.trim(),
+      email:               document.getElementById("email").value.trim(),
+      field:               document.getElementById("field").value.trim(),
+      country:             document.getElementById("country").value.trim(),
+      language:            document.getElementById("language").value,
+      experience_years:    parseInt(document.getElementById("experience").value),
+      mentorship_capacity: parseInt(document.getElementById("capacity").value),
+      diaspora_status:     document.getElementById("diaspora").checked,
+      expertise_tags:      toList(document.getElementById("expertise").value),
+      bio:                 document.getElementById("bio").value.trim() || null,
+      availability:        true,
+    };
+
+    try {
+      const res = await fetch(`${API}/mentors/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        const mentor = await res.json();
+        alertArea.innerHTML = `
+          <div class="alert alert-success">
+            Welcome to RootsLink! Your mentor ID is <strong>#${mentor.id}</strong>.
+            Thank you for giving back.
+          </div>`;
+        document.getElementById("mentor-form").reset();
+      } else {
+        const err = await res.json();
+        alertArea.innerHTML = `<div class="alert alert-error">${err.detail || "Registration failed."}</div>`;
+      }
+    } catch {
+      alertArea.innerHTML = `<div class="alert alert-error">Could not connect to API. Is the server running?</div>`;
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opportunities — RootsLink</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">RootsLink</a>
+  <div class="nav-links">
+    <a href="register-mentor.html">Become a Mentor</a>
+    <a href="register-student.html">Join as Student</a>
+    <a href="dashboard.html">Dashboard</a>
+  </div>
+</nav>
+
+<div class="section">
+  <h2 class="section-title">Opportunity Database</h2>
+  <p class="section-sub">Scholarships, fellowships, internships, research programs, and more — continuously updated.</p>
+
+  <!-- Filters -->
+  <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:2rem;">
+    <select id="filter-type" style="padding:.6rem 1rem; border-radius:8px; border:1.5px solid #e8dfd0; background:#f8f4ef;">
+      <option value="">All Types</option>
+      <option value="scholarship">Scholarship</option>
+      <option value="fellowship">Fellowship</option>
+      <option value="internship">Internship</option>
+      <option value="research">Research</option>
+      <option value="competition">Competition</option>
+      <option value="hackathon">Hackathon</option>
+    </select>
+    <select id="filter-mode" style="padding:.6rem 1rem; border-radius:8px; border:1.5px solid #e8dfd0; background:#f8f4ef;">
+      <option value="">All Modes</option>
+      <option value="remote">Remote</option>
+      <option value="local">Local</option>
+      <option value="hybrid">Hybrid</option>
+      <option value="international">International</option>
+    </select>
+    <button onclick="loadOpportunities()" class="btn btn-primary btn-sm">Filter</button>
+  </div>
+
+  <div id="opp-grid" class="card-grid">
+    <p style="color:var(--muted);">Loading opportunities...</p>
+  </div>
+</div>
+
+<footer>
+  <p>RootsLink · <a href="index.html">Home</a></p>
+</footer>
+
+<script>
+  const API = "http://localhost:8000";
+
+  async function loadOpportunities() {
+    const type = document.getElementById("filter-type").value;
+    const mode = document.getElementById("filter-mode").value;
+
+    let url = `${API}/opportunities/?limit=50`;
+    if (type) url += `&type=${type}`;
+    if (mode) url += `&mode=${mode}`;
+
+    const grid = document.getElementById("opp-grid");
+    grid.innerHTML = "<p style='color:var(--muted);'>Loading...</p>";
+
+    try {
+      const res  = await fetch(url);
+      const data = await res.json();
+
+      if (!data.length) {
+        grid.innerHTML = "<p style='color:var(--muted);'>No opportunities found.</p>";
+        return;
+      }
+
+      grid.innerHTML = data.map(opp => `
+        <div class="card">
+          <span class="card-tag">${opp.type} · ${opp.mode}</span>
+          <h3>${opp.title}</h3>
+          <p style="font-weight:600; font-size:.85rem; margin:.25rem 0;">${opp.organization}</p>
+          <p>${opp.description || "No description available."}</p>
+          ${opp.deadline ? `<p style="margin-top:.5rem; font-size:.8rem; color:var(--muted);">Deadline: ${opp.deadline}</p>` : ""}
+          <p style="font-size:.8rem; color:var(--muted);">Cost: ${opp.cost === 0 ? "Free" : `$${opp.cost}`} · Impact: ${opp.impact_score}/10</p>
+          ${opp.link ? `<a href="${opp.link}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:1rem; display:inline-block;">Apply →</a>` : ""}
+        </div>
+      `).join("");
+    } catch {
+      grid.innerHTML = "<p style='color:var(--muted);'>Could not connect to API. Is the server running?</p>";
+    }
+  }
+
+  loadOpportunities();
+</script>
+</body>
+</html>

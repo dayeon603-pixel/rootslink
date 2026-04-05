@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Dashboard — RootsLink</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">RootsLink</a>
+  <div class="nav-links">
+    <a href="opportunities.html">Opportunities</a>
+    <a href="register-student.html">Register</a>
+  </div>
+</nav>
+
+<!-- User ID input -->
+<div id="id-prompt" style="max-width:480px; margin:3rem auto; text-align:center; padding:0 1rem;">
+  <h2 style="margin-bottom:1rem;">Enter Your Student ID</h2>
+  <div style="display:flex; gap:.5rem;">
+    <input type="number" id="user-id-input" placeholder="e.g. 1"
+           style="flex:1; padding:.7rem 1rem; border-radius:8px; border:1.5px solid #e8dfd0; font-size:1rem;" />
+    <button onclick="loadDashboard()" class="btn btn-primary">View Matches</button>
+  </div>
+</div>
+
+<div id="dashboard-content" style="display:none;">
+  <div class="dashboard-grid">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h3 id="user-name">—</h3>
+      <p style="font-size:.85rem; color:var(--muted); margin-bottom:1rem;" id="user-meta">—</p>
+
+      <p style="font-size:.85rem; font-weight:600; margin-bottom:.5rem;">Brain-Drain Risk</p>
+      <span id="risk-badge" class="risk-badge risk-medium">—</span>
+      <div class="score-bar" style="margin-top:.75rem;">
+        <div id="risk-fill" class="score-fill" style="width:0%; background:linear-gradient(90deg,#fbbf24,#dc2626);"></div>
+      </div>
+      <p style="font-size:.75rem; color:var(--muted); margin-top:.4rem;" id="risk-score">—</p>
+
+      <hr style="margin:1.5rem 0; border:none; border-top:1px solid #e8dfd0;" />
+
+      <h3 style="margin-bottom:1rem;">Your Pathway</h3>
+      <ol class="pathway-list" id="pathway-list"></ol>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+
+      <!-- Top Mentors -->
+      <h2 style="font-size:1.3rem; font-weight:700; margin-bottom:1rem;">Top Mentor Matches</h2>
+      <div id="mentor-list"></div>
+
+      <!-- Top Opportunities -->
+      <h2 style="font-size:1.3rem; font-weight:700; margin:2rem 0 1rem;">Top Opportunity Matches</h2>
+      <div id="opp-list"></div>
+
+    </main>
+  </div>
+</div>
+
+<footer>
+  <p>RootsLink · <a href="index.html">Home</a></p>
+</footer>
+
+<script>
+  const API = "http://localhost:8000";
+
+  // Check URL param
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("user_id")) {
+    document.getElementById("user-id-input").value = params.get("user_id");
+    loadDashboard();
+  }
+
+  async function loadDashboard() {
+    const userId = document.getElementById("user-id-input").value.trim();
+    if (!userId) return;
+
+    try {
+      // Load user profile
+      const userRes  = await fetch(`${API}/users/${userId}`);
+      const matchRes = await fetch(`${API}/match/${userId}`);
+
+      if (!userRes.ok || !matchRes.ok) {
+        alert("User not found. Please check your ID.");
+        return;
+      }
+
+      const user  = await userRes.json();
+      const match = await matchRes.json();
+
+      document.getElementById("id-prompt").style.display       = "none";
+      document.getElementById("dashboard-content").style.display = "block";
+
+      // Sidebar
+      document.getElementById("user-name").textContent = user.name;
+      document.getElementById("user-meta").textContent =
+        `${user.country}${user.region ? ", " + user.region : ""} · ${user.education_level || "Student"}`;
+
+      const riskPct   = Math.round(match.brain_drain_risk * 100);
+      const riskBadge = document.getElementById("risk-badge");
+      riskBadge.textContent  = match.risk_level.toUpperCase();
+      riskBadge.className    = `risk-badge risk-${match.risk_level}`;
+      document.getElementById("risk-fill").style.width = `${riskPct}%`;
+      document.getElementById("risk-score").textContent = `Score: ${match.brain_drain_risk} / 1.0`;
+
+      // Pathway
+      const pathwayList = document.getElementById("pathway-list");
+      pathwayList.innerHTML = match.pathway_summary.map(step => `<li>${step}</li>`).join("");
+
+      // Mentors
+      const mentorList = document.getElementById("mentor-list");
+      mentorList.innerHTML = match.top_mentors.length
+        ? match.top_mentors.map(m => `
+          <div class="match-card">
+            <h4>${m.name}</h4>
+            <p class="match-meta">${m.field} · ${m.country} · ${m.language}
+              ${m.diaspora_status ? " · <em>Diaspora</em>" : ""}
+            </p>
+            <div class="score-bar"><div class="score-fill" style="width:${Math.round(m.mentor_match_score*100)}%"></div></div>
+            <p style="font-size:.8rem; color:var(--muted);">Match score: ${m.mentor_match_score}</p>
+            <ul class="reasons-list">${m.reasons.map(r => `<li>${r}</li>`).join("")}</ul>
+          </div>`).join("")
+        : "<p style='color:var(--muted);'>No mentors available yet.</p>";
+
+      // Opportunities
+      const oppList = document.getElementById("opp-list");
+      oppList.innerHTML = match.top_opportunities.length
+        ? match.top_opportunities.map(o => `
+          <div class="match-card">
+            <h4>${o.title}</h4>
+            <p class="match-meta">${o.organization} · ${o.type} · ${o.mode}</p>
+            <div class="score-bar"><div class="score-fill" style="width:${Math.round(o.final_score*100)}%"></div></div>
+            <p style="font-size:.8rem; color:var(--muted);">
+              Final score: ${o.final_score}
+              (fit: ${o.opportunity_fit_score} · retention: ${o.retention_priority_score})
+            </p>
+            <ul class="reasons-list">${o.reasons.map(r => `<li>${r}</li>`).join("")}</ul>
+            ${o.barriers.length ? `<ul class="reasons-list barriers-list">${o.barriers.map(b => `<li>${b}</li>`).join("")}</ul>` : ""}
+            ${o.link ? `<a href="${o.link}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:.75rem; display:inline-block;">Apply →</a>` : ""}
+          </div>`).join("")
+        : "<p style='color:var(--muted);'>No opportunities matched. Try adding more to the database.</p>";
+
+    } catch (err) {
+      alert("Could not connect to the API. Is the server running on port 8000?");
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RootsLink — Global Talent Retention Network</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">RootsLink</a>
+  <div class="nav-links">
+    <a href="opportunities.html">Opportunities</a>
+    <a href="register-mentor.html">Become a Mentor</a>
+    <a href="register-student.html">Join as Student</a>
+    <a href="dashboard.html">Dashboard</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>Talent stays rooted.<br>Opportunity comes to you.</h1>
+  <p>RootsLink connects underserved students with mentors, scholarships, and local pathways — so global ambition doesn't require permanent departure.</p>
+  <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+    <a href="register-student.html" class="btn btn-secondary">Join as Student</a>
+    <a href="register-mentor.html" class="btn btn-outline" style="color:#fff; border-color:#fff;">Become a Mentor</a>
+  </div>
+</section>
+
+<!-- Impact Stats -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-number" id="stat-users">—</div>
+    <div class="stat-label">Students Registered</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number" id="stat-mentors">—</div>
+    <div class="stat-label">Active Mentors</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number" id="stat-opps">—</div>
+    <div class="stat-label">Opportunities Listed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number" id="stat-interactions">—</div>
+    <div class="stat-label">Connections Made</div>
+  </div>
+</div>
+
+<!-- How It Works -->
+<div class="section">
+  <h2 class="section-title">How RootsLink Works</h2>
+  <p class="section-sub">A four-step AI-driven pathway from talent to opportunity.</p>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-tag">Step 1</div>
+      <h3>Build Your Profile</h3>
+      <p>Share your skills, goals, location, and barriers. The system encodes your context into a structured profile.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Step 2</div>
+      <h3>Get Matched</h3>
+      <p>Our algorithms score every opportunity and mentor against your profile — prioritising fit, feasibility, and local impact.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Step 3</div>
+      <h3>Follow Your Pathway</h3>
+      <p>Receive a step-by-step pathway — not just a list of links, but a sequenced journey toward your goals.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Step 4</div>
+      <h3>Grow and Give Back</h3>
+      <p>As you progress, your matches improve. Alumni become mentors. The network compounds over time.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Algorithms -->
+<div style="background: var(--white);">
+  <div class="section">
+    <h2 class="section-title">The Intelligence Behind the Platform</h2>
+    <p class="section-sub">Four scoring algorithms working in parallel.</p>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-tag">Algorithm 1</div>
+        <h3>Opportunity Fit Score</h3>
+        <p>Matches your skills, interests, eligibility, location, and deadline readiness against every opportunity.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Algorithm 2</div>
+        <h3>Mentor Match Score</h3>
+        <p>Ranks mentors by field alignment, regional relevance, language, lived experience, and capacity.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Algorithm 3</div>
+        <h3>Brain-Drain Risk Index</h3>
+        <p>Estimates your structural vulnerability — aspiration-opportunity mismatch, mentorship scarcity, and local pathway visibility.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Algorithm 4</div>
+        <h3>Retention Priority Score</h3>
+        <p>Re-ranks opportunities to favour those that maximise local contribution alongside personal growth.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="section" style="text-align:center;">
+  <h2 class="section-title">Ready to find your pathway?</h2>
+  <p class="section-sub">Join the network. It takes 3 minutes.</p>
+  <a href="register-student.html" class="btn btn-primary">Get Started</a>
+</div>
+
+<footer>
+  <p>RootsLink — A Continuous Global Talent Retention Network &amp; Research Observatory</p>
+  <p style="margin-top:.5rem;">Built by <a href="#">Dayeon Kang</a> · MIT License · <a href="#">GitHub</a></p>
+</footer>
+
+<script>
+  // Load impact stats from API
+  const API = "http://localhost:8000";
+  fetch(`${API}/match/stats/overview`)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById("stat-users").textContent        = d.total_users;
+      document.getElementById("stat-mentors").textContent      = d.total_mentors;
+      document.getElementById("stat-opps").textContent         = d.total_opportunities;
+      document.getElementById("stat-interactions").textContent = d.total_interactions;
+    })
+    .catch(() => {
+      // API not running — show placeholder
+      ["stat-users","stat-mentors","stat-opps","stat-interactions"]
+        .forEach(id => document.getElementById(id).textContent = "—");
+    });
+</script>
+</body>
+</html>

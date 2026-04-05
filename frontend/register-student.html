@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join as Student — RootsLink</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">RootsLink</a>
+  <div class="nav-links">
+    <a href="opportunities.html">Opportunities</a>
+    <a href="register-mentor.html">Become a Mentor</a>
+    <a href="dashboard.html">Dashboard</a>
+  </div>
+</nav>
+
+<div class="form-container">
+  <h1 class="form-title">Join as a Student</h1>
+  <p class="form-sub">Build your profile. Get matched with mentors and opportunities tailored to your context.</p>
+
+  <div id="alert-area"></div>
+
+  <form id="student-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" required placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input type="email" id="email" required placeholder="you@email.com" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="country">Country *</label>
+        <input type="text" id="country" required placeholder="e.g. Nigeria" />
+      </div>
+      <div class="form-group">
+        <label for="region">Region / City</label>
+        <input type="text" id="region" placeholder="e.g. Lagos" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="language">Primary Language *</label>
+        <select id="language">
+          <option value="English">English</option>
+          <option value="French">French</option>
+          <option value="Spanish">Spanish</option>
+          <option value="Arabic">Arabic</option>
+          <option value="Portuguese">Portuguese</option>
+          <option value="Korean">Korean</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Swahili">Swahili</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="education">Education Level</label>
+        <select id="education">
+          <option value="">Select...</option>
+          <option value="high_school">High School</option>
+          <option value="undergraduate">Undergraduate</option>
+          <option value="graduate">Graduate</option>
+          <option value="phd">PhD</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="interests">Interests (comma-separated)</label>
+      <input type="text" id="interests" placeholder="e.g. technology, public health, entrepreneurship" />
+      <p class="form-hint">Used for opportunity and mentor matching.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="skills">Skills (comma-separated)</label>
+      <input type="text" id="skills" placeholder="e.g. python, data analysis, public speaking" />
+    </div>
+
+    <div class="form-group">
+      <label for="goals">Goals &amp; Aspirations</label>
+      <textarea id="goals" placeholder="Describe what you want to achieve — career, research, impact..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="barriers">Barriers you face (comma-separated)</label>
+      <input type="text" id="barriers" placeholder="e.g. financial, language, internet, transportation" />
+      <p class="form-hint">This helps us filter out inaccessible opportunities and prioritise feasible ones.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="mobility">How strongly are you considering leaving your country permanently? (0 = staying, 10 = definitely leaving)</label>
+      <input type="range" id="mobility" min="0" max="10" value="4" step="1"
+             oninput="document.getElementById('mobility-val').textContent = this.value" />
+      <p class="form-hint">Current value: <strong id="mobility-val">4</strong> / 10</p>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:.5rem;">
+      Create My Profile
+    </button>
+  </form>
+</div>
+
+<footer>
+  <p>RootsLink · <a href="index.html">Home</a></p>
+</footer>
+
+<script>
+  const API = "http://localhost:8000";
+
+  document.getElementById("student-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const alertArea = document.getElementById("alert-area");
+
+    const toList = (val) => val.split(",").map(s => s.trim()).filter(Boolean);
+
+    const payload = {
+      name:            document.getElementById("name").value.trim(),
+      email:           document.getElementById("email").value.trim(),
+      country:         document.getElementById("country").value.trim(),
+      region:          document.getElementById("region").value.trim() || null,
+      language:        document.getElementById("language").value,
+      education_level: document.getElementById("education").value || null,
+      interests:       toList(document.getElementById("interests").value),
+      skills:          toList(document.getElementById("skills").value),
+      goals:           document.getElementById("goals").value.trim() || null,
+      barriers:        toList(document.getElementById("barriers").value),
+      mobility_intent: parseInt(document.getElementById("mobility").value) / 10,
+    };
+
+    try {
+      const res = await fetch(`${API}/users/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        const user = await res.json();
+        alertArea.innerHTML = `
+          <div class="alert alert-success">
+            Profile created! Your ID is <strong>#${user.id}</strong>.
+            <a href="dashboard.html?user_id=${user.id}" style="margin-left:.5rem;">View your matches →</a>
+          </div>`;
+        document.getElementById("student-form").reset();
+      } else {
+        const err = await res.json();
+        alertArea.innerHTML = `<div class="alert alert-error">${err.detail || "Registration failed."}</div>`;
+      }
+    } catch {
+      alertArea.innerHTML = `<div class="alert alert-error">Could not connect to API. Is the server running?</div>`;
+    }
+  });
+</script>
+</body>
+</html>
